@@ -83,18 +83,18 @@ public class MainActivity extends AppCompatActivity {
 
             return loadFragment(fragment);
         });
-        Button btnCreateTestData = new Button(this);
-        btnCreateTestData.setText("Créer données de test");
-        btnCreateTestData.setOnClickListener(v -> {
-            new Thread(() -> {
-                TestDataHelper testDataHelper = new TestDataHelper(this);
-                testDataHelper.createTestData();
-
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "Données de test créées!", Toast.LENGTH_SHORT).show();
-                });
-            }).start();
-        });
+//        Button btnCreateTestData = new Button(this);
+//        btnCreateTestData.setText("Créer données de test");
+//        btnCreateTestData.setOnClickListener(v -> {
+//            new Thread(() -> {
+//                TestDataHelper testDataHelper = new TestDataHelper(this);
+//                testDataHelper.createTestData();
+//
+//                runOnUiThread(() -> {
+//                    Toast.makeText(this, "Données de test créées!", Toast.LENGTH_SHORT).show();
+//                });
+//            }).start();
+//        });
     }
 
     private boolean loadFragment(Fragment fragment) {

@@ -1,6 +1,7 @@
 package com.example.projetmobilemysql.fragments;
 
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.projetmobilemysql.R;
+import com.example.projetmobilemysql.activities.AddPropertyActivity;
+import com.example.projetmobilemysql.adapters.PropertyAdapter;
 import com.example.projetmobilemysql.database.PropertyDAO;
 import com.example.projetmobilemysql.models.Property;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -65,8 +68,9 @@ public class PropertiesFragment extends Fragment {
 
         // Listener FAB
         fabAddProperty.setOnClickListener(v -> {
-            // TODO: Ouvrir AddPropertyActivity
-            Toast.makeText(getContext(), "Ajouter une propriété", Toast.LENGTH_SHORT).show();
+            // Ouvrir AddPropertyActivity
+            Intent intent = new Intent(getContext(), AddPropertyActivity.class);
+            startActivity(intent);
         });
 
         return view;

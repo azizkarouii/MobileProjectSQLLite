@@ -1,6 +1,7 @@
 package com.example.projetmobilemysql.fragments;
 
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.projetmobilemysql.R;
+import com.example.projetmobilemysql.activities.AddReservationActivity;
+import com.example.projetmobilemysql.adapters.ReservationAdapter;
 import com.example.projetmobilemysql.database.ReservationDAO;
 import com.example.projetmobilemysql.models.Reservation;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -72,8 +75,9 @@ public class ReservationsFragment extends Fragment {
 
         // Listener FAB
         fabAddReservation.setOnClickListener(v -> {
-            // TODO: Ouvrir AddReservationActivity
-            Toast.makeText(getContext(), "Ajouter une réservation", Toast.LENGTH_SHORT).show();
+            // Ouvrir AddReservationActivity
+            Intent intent = new Intent(getContext(), AddReservationActivity.class);
+            startActivity(intent);
         });
 
         return view;
