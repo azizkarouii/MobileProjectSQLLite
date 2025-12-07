@@ -1,6 +1,7 @@
 package com.example.projetmobilemysql.activities;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -14,9 +15,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.projetmobilemysql.R;
+import com.example.projetmobilemysql.database.PropertyAvailabilityDAO;
 import com.example.projetmobilemysql.database.PropertyDAO;
 import com.example.projetmobilemysql.database.ReservationDAO;
 import com.example.projetmobilemysql.models.Property;
+import com.example.projetmobilemysql.models.PropertyAvailability;
 import com.example.projetmobilemysql.models.Reservation;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -27,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class AddReservationActivity extends AppCompatActivity {
 
@@ -35,14 +39,16 @@ public class AddReservationActivity extends AppCompatActivity {
     private TextInputEditText startDateInput, endDateInput;
     private TextInputEditText totalAmountInput, advanceAmountInput, notesInput;
     private RadioButton statusPending, statusReserved;
-    private MaterialButton saveButton;
+    private MaterialButton saveButton, viewCalendarButton;
     private MaterialToolbar toolbar;
 
     private PropertyDAO propertyDAO;
     private ReservationDAO reservationDAO;
+    private PropertyAvailabilityDAO availabilityDAO;
     private int currentUserId;
     private List<Property> propertyList;
     private int selectedPropertyId = -1;
+    private Property selectedProperty = null;
 
     private Calendar startCalendar = Calendar.getInstance();
     private Calendar endCalendar = Calendar.getInstance();
@@ -56,6 +62,7 @@ public class AddReservationActivity extends AppCompatActivity {
         // Initialiser DAOs
         propertyDAO = new PropertyDAO(this);
         reservationDAO = new ReservationDAO(this);
+        availabilityDAO = new PropertyAvailabilityDAO(this);
 
         // Récupérer l'ID de l'utilisateur connecté
         SharedPreferences prefs = getSharedPreferences("SamsaraPrefs", MODE_PRIVATE);
@@ -76,6 +83,8 @@ public class AddReservationActivity extends AppCompatActivity {
 
         // Listener
         saveButton.setOnClickListener(v -> saveReservation());
+
+        viewCalendarButton.setOnClickListener(v -> openPropertyCalendar());
     }
 
     private void initViews() {
@@ -91,6 +100,7 @@ public class AddReservationActivity extends AppCompatActivity {
         statusPending = findViewById(R.id.statusPending);
         statusReserved = findViewById(R.id.statusReserved);
         saveButton = findViewById(R.id.saveButton);
+        viewCalendarButton = findViewById(R.id.viewCalendarButton);
     }
 
     private void loadProperties() {
@@ -126,19 +136,27 @@ public class AddReservationActivity extends AppCompatActivity {
                         @Override
                         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                             if (position > 0) {
-                                Property selectedProperty = propertyList.get(position - 1);
+                                selectedProperty = propertyList.get(position - 1);
                                 selectedPropertyId = selectedProperty.getId();
 
-                                // Pré-remplir le prix
-                                totalAmountInput.setText(String.valueOf(selectedProperty.getPricePerDay()));
+                                // Activer le bouton calendrier
+                                viewCalendarButton.setEnabled(true);
+
+                                // Recalculer le prix si les dates sont déjà sélectionnées
+                                calculateTotalAmount();
                             } else {
                                 selectedPropertyId = -1;
+                                selectedProperty = null;
+                                viewCalendarButton.setEnabled(false);
+                                totalAmountInput.setText("");
                             }
                         }
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parent) {
                             selectedPropertyId = -1;
+                            selectedProperty = null;
+                            viewCalendarButton.setEnabled(false);
                         }
                     });
                 });
@@ -151,12 +169,64 @@ public class AddReservationActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void openPropertyCalendar() {
+        if (selectedPropertyId == -1) {
+            Toast.makeText(this, "Sélectionnez d'abord une propriété", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (selectedProperty != null) {
+            Intent intent = new Intent(this, ReservationCalendarPickerActivity.class);
+            intent.putExtra("property_id", selectedPropertyId);
+            intent.putExtra("property_title", selectedProperty.getTitle());
+            startActivityForResult(intent, 100);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+            String startDate = data.getStringExtra("start_date");
+            String endDate = data.getStringExtra("end_date");
+
+            if (startDate != null && endDate != null) {
+                startDateInput.setText(startDate);
+                endDateInput.setText(endDate);
+
+                // Mettre à jour les calendriers
+                try {
+                    startCalendar.setTime(dateFormatter.parse(startDate));
+                    endCalendar.setTime(dateFormatter.parse(endDate));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // Calculer automatiquement le montant
+                calculateTotalAmount();
+
+                Toast.makeText(this, "Dates sélectionnées depuis le calendrier",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void showStartDatePicker() {
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
                     startCalendar.set(year, month, dayOfMonth);
-                    startDateInput.setText(dateFormatter.format(startCalendar.getTime()));
+                    String date = dateFormatter.format(startCalendar.getTime());
+                    startDateInput.setText(date);
+
+                    // Calculer automatiquement le montant
+                    calculateTotalAmount();
+
+                    // Vérifier la disponibilité
+                    if (selectedPropertyId != -1) {
+                        checkDateAvailability(date);
+                    }
                 },
                 startCalendar.get(Calendar.YEAR),
                 startCalendar.get(Calendar.MONTH),
@@ -171,7 +241,16 @@ public class AddReservationActivity extends AppCompatActivity {
                 this,
                 (view, year, month, dayOfMonth) -> {
                     endCalendar.set(year, month, dayOfMonth);
-                    endDateInput.setText(dateFormatter.format(endCalendar.getTime()));
+                    String date = dateFormatter.format(endCalendar.getTime());
+                    endDateInput.setText(date);
+
+                    // Calculer automatiquement le montant
+                    calculateTotalAmount();
+
+                    // Vérifier la disponibilité
+                    if (selectedPropertyId != -1) {
+                        checkDateAvailability(date);
+                    }
                 },
                 endCalendar.get(Calendar.YEAR),
                 endCalendar.get(Calendar.MONTH),
@@ -181,8 +260,84 @@ public class AddReservationActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
+    /**
+     * Calculer automatiquement le montant total basé sur le nombre de jours et le prix par jour
+     */
+    private void calculateTotalAmount() {
+        String startDate = startDateInput.getText().toString().trim();
+        String endDate = endDateInput.getText().toString().trim();
+
+        if (TextUtils.isEmpty(startDate) || TextUtils.isEmpty(endDate) || selectedProperty == null) {
+            return;
+        }
+
+        try {
+            // Calculer le nombre de jours
+            long diffInMillis = endCalendar.getTimeInMillis() - startCalendar.getTimeInMillis();
+            long numberOfDays = TimeUnit.MILLISECONDS.toDays(diffInMillis) + 1; // +1 pour inclure le dernier jour
+
+            if (numberOfDays <= 0) {
+                Toast.makeText(this, "La date de fin doit être après la date de début",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Calculer le montant total
+            double pricePerDay = selectedProperty.getPricePerDay();
+            double totalAmount = numberOfDays * pricePerDay;
+
+            // Afficher dans le champ
+            totalAmountInput.setText(String.format("%.0f", totalAmount));
+
+            // Afficher un message informatif
+            Toast.makeText(this,
+                    String.format("%d jour(s) × %.0f TND = %.0f TND", numberOfDays, pricePerDay, totalAmount),
+                    Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkDateAvailability(String date) {
+        new Thread(() -> {
+            try {
+                PropertyAvailability availability = availabilityDAO.getAvailability(selectedPropertyId, date);
+
+                // Vérifier les réservations confirmées
+                List<Reservation> reservations = reservationDAO.getReservationsByProperty(selectedPropertyId);
+                boolean hasConflict = false;
+
+                for (Reservation res : reservations) {
+                    if (isDateInRange(date, res.getStartDate(), res.getEndDate())) {
+                        if (res.getStatus().equals("reserved")) {
+                            hasConflict = true;
+                            break;
+                        }
+                    }
+                }
+
+                final boolean conflict = hasConflict;
+                runOnUiThread(() -> {
+                    if (conflict) {
+                        Toast.makeText(this, "⚠️ Cette date est déjà réservée",
+                                Toast.LENGTH_SHORT).show();
+                    } else if (availability != null && availability.getStatus().equals("unavailable")) {
+                        Toast.makeText(this, "⚠️ Cette date est marquée comme non disponible",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (Exception e) {
+                // Ignorer l'erreur
+            }
+        }).start();
+    }
+
+    private boolean isDateInRange(String date, String startDate, String endDate) {
+        return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
+    }
+
     private void saveReservation() {
-        // Récupérer les valeurs
         String clientName = clientNameInput.getText().toString().trim();
         String clientPhone = clientPhoneInput.getText().toString().trim();
         String startDate = startDateInput.getText().toString().trim();
@@ -219,14 +374,12 @@ public class AddReservationActivity extends AppCompatActivity {
             return;
         }
 
-        // Vérifier que la date de fin est après la date de début
         if (endCalendar.before(startCalendar)) {
             Toast.makeText(this, "La date de fin doit être après la date de début",
                     Toast.LENGTH_LONG).show();
             return;
         }
 
-        // Créer l'objet Reservation
         Reservation reservation = new Reservation();
         reservation.setPropertyId(selectedPropertyId);
         reservation.setSamsarId(currentUserId);
@@ -239,13 +392,11 @@ public class AddReservationActivity extends AppCompatActivity {
         reservation.setNotes(notes);
         reservation.setStatus(statusReserved.isChecked() ? "reserved" : "pending");
 
-        // Sauvegarder en arrière-plan
         saveButton.setEnabled(false);
         saveButton.setText("Enregistrement...");
 
         new Thread(() -> {
             try {
-                // Vérifier la disponibilité
                 boolean available = reservationDAO.isPropertyAvailable(
                         selectedPropertyId, startDate, endDate
                 );

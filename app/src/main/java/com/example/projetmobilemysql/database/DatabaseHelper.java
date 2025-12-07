@@ -8,7 +8,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Nom et version de la base de données
     private static final String DATABASE_NAME = "samsara.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Incrémenté pour la nouvelle table
 
     // Table USERS
     public static final String TABLE_USERS = "users";
@@ -67,6 +67,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_PROPERTY_SAMSARS = "property_samsars";
     public static final String COLUMN_PS_PROPERTY_ID = "property_id";
     public static final String COLUMN_PS_SAMSAR_ID = "samsar_id";
+
+    // Table PROPERTY_AVAILABILITY (nouvelle table)
+    public static final String TABLE_PROPERTY_AVAILABILITY = "property_availability";
+    public static final String COLUMN_AVAIL_ID = "id";
+    public static final String COLUMN_AVAIL_PROPERTY_ID = "property_id";
+    public static final String COLUMN_AVAIL_DATE = "date";
+    public static final String COLUMN_AVAIL_STATUS = "status"; // available, pending, unavailable
+    public static final String COLUMN_AVAIL_NOTES = "notes";
+    public static final String COLUMN_AVAIL_CREATED_AT = "created_at";
 
     // Requêtes de création des tables
     private static final String CREATE_TABLE_USERS = "CREATE TABLE " + TABLE_USERS + " ("
@@ -133,6 +142,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY(" + COLUMN_PS_SAMSAR_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + ")"
             + ")";
 
+    private static final String CREATE_TABLE_PROPERTY_AVAILABILITY = "CREATE TABLE " + TABLE_PROPERTY_AVAILABILITY + " ("
+            + COLUMN_AVAIL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_AVAIL_PROPERTY_ID + " INTEGER NOT NULL, "
+            + COLUMN_AVAIL_DATE + " TEXT NOT NULL, "
+            + COLUMN_AVAIL_STATUS + " TEXT DEFAULT 'available', "
+            + COLUMN_AVAIL_NOTES + " TEXT, "
+            + COLUMN_AVAIL_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
+            + "UNIQUE(" + COLUMN_AVAIL_PROPERTY_ID + ", " + COLUMN_AVAIL_DATE + "), "
+            + "FOREIGN KEY(" + COLUMN_AVAIL_PROPERTY_ID + ") REFERENCES " + TABLE_PROPERTIES + "(" + COLUMN_PROP_ID + ") ON DELETE CASCADE"
+            + ")";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -144,18 +164,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_PROPERTIES);
         db.execSQL(CREATE_TABLE_RESERVATIONS);
         db.execSQL(CREATE_TABLE_PROPERTY_SAMSARS);
+        db.execSQL(CREATE_TABLE_PROPERTY_AVAILABILITY);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Supprimer les anciennes tables si elles existent
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PROPERTY_SAMSARS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_RESERVATIONS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PROPERTIES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-
-        // Recréer les tables
-        onCreate(db);
+        if (oldVersion < 2) {
+            // Ajouter la table property_availability
+            db.execSQL(CREATE_TABLE_PROPERTY_AVAILABILITY);
+        }
     }
 
     @Override

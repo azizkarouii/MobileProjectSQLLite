@@ -1,6 +1,5 @@
 package com.example.projetmobilemysql.fragments;
 
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -19,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.projetmobilemysql.R;
 import com.example.projetmobilemysql.activities.AddPropertyActivity;
+import com.example.projetmobilemysql.activities.PropertyCalendarActivity;
+import com.example.projetmobilemysql.activities.PropertyDetailActivity;
 import com.example.projetmobilemysql.adapters.PropertyAdapter;
 import com.example.projetmobilemysql.database.PropertyDAO;
 import com.example.projetmobilemysql.models.Property;
@@ -70,10 +71,19 @@ public class PropertiesFragment extends Fragment {
 
         // Click listener sur les propriétés
         adapter.setOnPropertyClickListener(property -> {
-            Toast.makeText(getContext(),
-                    "Propriété: " + property.getTitle(),
-                    Toast.LENGTH_SHORT).show();
-            // TODO: Ouvrir PropertyDetailActivity
+            // Ouvrir les détails de la propriété
+            Intent intent = new Intent(getContext(), PropertyDetailActivity.class);
+            intent.putExtra("property_id", property.getId());
+            startActivity(intent);
+        });
+
+        // Listener pour le bouton calendrier
+        adapter.setOnCalendarClickListener(property -> {
+            // Ouvrir le calendrier de la propriété
+            Intent intent = new Intent(getContext(), PropertyCalendarActivity.class);
+            intent.putExtra("property_id", property.getId());
+            intent.putExtra("property_title", property.getTitle());
+            startActivity(intent);
         });
 
         // IMPORTANT: Charger les propriétés APRÈS avoir configuré l'adapter
@@ -108,10 +118,6 @@ public class PropertiesFragment extends Fragment {
                     } else {
                         showEmptyView(false);
                         adapter.notifyDataSetChanged();
-
-                        Toast.makeText(getContext(),
-                                propertyList.size() + " propriétés trouvées",
-                                Toast.LENGTH_SHORT).show();
                     }
                 });
             } catch (Exception e) {

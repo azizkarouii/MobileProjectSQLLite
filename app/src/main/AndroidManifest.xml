@@ -12,6 +12,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjetMobileMYSQL">
         <activity
+            android:name=".activities.PropertyCalendarActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.ReservationCalendarPickerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.PropertyDetailActivity"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
             android:name=".activities.EditProfileActivity"
             android:exported="false" />
         <activity

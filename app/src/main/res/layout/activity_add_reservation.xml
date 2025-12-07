@@ -40,6 +40,18 @@
             android:minHeight="48dp"
             android:background="@android:drawable/editbox_background" />
 
+        <!-- Bouton Calendrier -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/viewCalendarButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:enabled="false"
+            android:text="📅 Sélectionner dates depuis calendrier"
+            android:textSize="14sp"
+            app:cornerRadius="8dp" />
+
         <!-- Nom du client -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -80,6 +92,15 @@
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Saisie manuelle ou sélection depuis le calendrier"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp"
+            android:textStyle="italic" />
 
         <LinearLayout
             android:layout_width="match_parent"

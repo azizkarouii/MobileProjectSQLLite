@@ -1,10 +1,10 @@
 package com.example.projetmobilemysql.adapters;
 
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,9 +20,14 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
     private List<Property> propertyList;
     private Context context;
     private OnPropertyClickListener listener;
+    private OnCalendarClickListener calendarListener;
 
     public interface OnPropertyClickListener {
         void onPropertyClick(Property property);
+    }
+
+    public interface OnCalendarClickListener {
+        void onCalendarClick(Property property);
     }
 
     public PropertyAdapter(List<Property> propertyList, Context context) {
@@ -32,6 +37,10 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
 
     public void setOnPropertyClickListener(OnPropertyClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setOnCalendarClickListener(OnCalendarClickListener listener) {
+        this.calendarListener = listener;
     }
 
     @NonNull
@@ -54,10 +63,17 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
         holder.equipmentText.setText(property.getEquipmentSummary());
         holder.priceText.setText(String.format("%.0f TND", property.getPricePerDay()));
 
-        // Click listener
+        // Click listener sur la propriété
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onPropertyClick(property);
+            }
+        });
+
+        // Click listener sur le bouton calendrier
+        holder.calendarButton.setOnClickListener(v -> {
+            if (calendarListener != null) {
+                calendarListener.onCalendarClick(property);
             }
         });
     }
@@ -75,6 +91,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
     static class PropertyViewHolder extends RecyclerView.ViewHolder {
         TextView titleText, typeText, addressText, configText;
         TextView capacityText, bathroomsText, equipmentText, priceText;
+        ImageButton calendarButton;
 
         public PropertyViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -86,6 +103,7 @@ public class PropertyAdapter extends RecyclerView.Adapter<PropertyAdapter.Proper
             bathroomsText = itemView.findViewById(R.id.bathroomsText);
             equipmentText = itemView.findViewById(R.id.equipmentText);
             priceText = itemView.findViewById(R.id.priceText);
+            calendarButton = itemView.findViewById(R.id.calendarButton);
         }
     }
 }
