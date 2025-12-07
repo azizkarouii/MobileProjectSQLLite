@@ -1,6 +1,7 @@
 package com.example.projetmobilemysql.fragments;
 
 
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -40,6 +41,7 @@ public class ReservationsFragment extends Fragment {
 
     private ReservationDAO reservationDAO;
     private List<Reservation> reservationList;
+    private ReservationAdapter adapter;
     private int currentUserId;
     private String currentFilter = "all"; // all, pending, reserved
 
@@ -67,10 +69,19 @@ public class ReservationsFragment extends Fragment {
         reservationList = new ArrayList<>();
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Configuration TabLayout
-        setupTabs();
+        // Créer et attacher l'adapter
+        adapter = new ReservationAdapter(reservationList, getContext());
+        recyclerView.setAdapter(adapter);
 
-        // Charger les réservations
+        // Click listener sur les réservations
+        adapter.setOnReservationClickListener(reservation -> {
+            Toast.makeText(getContext(),
+                    "Réservation: " + reservation.getClientName(),
+                    Toast.LENGTH_SHORT).show();
+            // TODO: Ouvrir ReservationDetailActivity
+        });
+
+        // IMPORTANT: Charger les réservations APRÈS avoir configuré l'adapter
         loadReservations();
 
         // Listener FAB
@@ -136,9 +147,7 @@ public class ReservationsFragment extends Fragment {
                         showEmptyView(true);
                     } else {
                         showEmptyView(false);
-                        // TODO: Créer ReservationAdapter et l'attacher
-                        // ReservationAdapter adapter = new ReservationAdapter(reservationList, getContext());
-                        // recyclerView.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
 
                         Toast.makeText(getContext(),
                                 reservationList.size() + " réservation(s) trouvée(s)",

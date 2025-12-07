@@ -38,6 +38,7 @@ public class PropertiesFragment extends Fragment {
 
     private PropertyDAO propertyDAO;
     private List<Property> propertyList;
+    private PropertyAdapter adapter;
     private int currentUserId;
 
     @Nullable
@@ -63,7 +64,19 @@ public class PropertiesFragment extends Fragment {
         propertyList = new ArrayList<>();
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Charger les propriétés
+        // Créer et attacher l'adapter
+        adapter = new PropertyAdapter(propertyList, getContext());
+        recyclerView.setAdapter(adapter);
+
+        // Click listener sur les propriétés
+        adapter.setOnPropertyClickListener(property -> {
+            Toast.makeText(getContext(),
+                    "Propriété: " + property.getTitle(),
+                    Toast.LENGTH_SHORT).show();
+            // TODO: Ouvrir PropertyDetailActivity
+        });
+
+        // IMPORTANT: Charger les propriétés APRÈS avoir configuré l'adapter
         loadProperties();
 
         // Listener FAB
@@ -94,9 +107,7 @@ public class PropertiesFragment extends Fragment {
                         showEmptyView(true);
                     } else {
                         showEmptyView(false);
-                        // TODO: Créer PropertyAdapter et l'attacher
-                        // PropertyAdapter adapter = new PropertyAdapter(propertyList, getContext());
-                        // recyclerView.setAdapter(adapter);
+                        adapter.notifyDataSetChanged();
 
                         Toast.makeText(getContext(),
                                 propertyList.size() + " propriétés trouvées",
