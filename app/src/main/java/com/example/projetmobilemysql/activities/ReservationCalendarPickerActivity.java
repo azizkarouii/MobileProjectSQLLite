@@ -91,6 +91,7 @@ public class ReservationCalendarPickerActivity extends AppCompatActivity {
                 startDateText.setText("Début: " + startDate);
                 endDateText.setText("Fin: (sélectionnez)");
                 infoText.setText("Maintenant, sélectionnez la date de fin");
+                infoText.setTextColor(0xFF757575);
                 confirmButton.setEnabled(false);
             } else if (endDate == null) {
                 // Deuxième sélection: date de fin
@@ -113,6 +114,7 @@ public class ReservationCalendarPickerActivity extends AppCompatActivity {
                 startDateText.setText("Début: " + startDate);
                 endDateText.setText("Fin: (sélectionnez)");
                 infoText.setText("Maintenant, sélectionnez la date de fin");
+                infoText.setTextColor(0xFF757575);
                 confirmButton.setEnabled(false);
             }
         });
@@ -136,15 +138,21 @@ public class ReservationCalendarPickerActivity extends AppCompatActivity {
 
                     // Vérifier les réservations
                     for (Reservation res : reservations) {
-                        if (isDateInRange(checkDate, res.getStartDate(), res.getEndDate())) {
-                            if (res.getStatus().equals("reserved")) {
+                        // Vérifier si checkDate est dans la période de réservation
+                        if (checkDate.compareTo(res.getStartDate()) >= 0 &&
+                                checkDate.compareTo(res.getEndDate()) <= 0) {
+
+                            // Vérifier le statut
+                            if (res.getStatus().equals("reserved") || res.getStatus().equals("active")) {
                                 hasConflict = true;
                                 conflictMessage = "❌ Période déjà réservée du " +
-                                        res.getStartDate() + " au " + res.getEndDate();
+                                        res.getStartDate() + " au " + res.getEndDate() +
+                                        " (Statut: " + res.getStatusLabel() + ")";
                                 break;
                             } else if (res.getStatus().equals("pending") && res.getAdvanceAmount() > 0) {
                                 hasConflict = true;
-                                conflictMessage = "⚠️ Période en attente avec avance reçue";
+                                conflictMessage = "⚠️ Période en attente avec avance reçue du " +
+                                        res.getStartDate() + " au " + res.getEndDate();
                                 break;
                             }
                         }
@@ -182,13 +190,10 @@ public class ReservationCalendarPickerActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Erreur: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
                 });
             }
         }).start();
-    }
-
-    private boolean isDateInRange(String date, String start, String end) {
-        return date.compareTo(start) >= 0 && date.compareTo(end) <= 0;
     }
 
     private void clearSelection() {

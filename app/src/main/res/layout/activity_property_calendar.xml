@@ -26,12 +26,12 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Légende -->
+            <!-- Légende avec statistiques -->
             <TextView
                 android:id="@+id/legendText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Légende:"
+                android:text="📊 Statistiques"
                 android:textColor="@android:color/black"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -54,15 +54,15 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="🟠 En attente"
-                    android:textColor="#FB8C00"
+                    android:text="🟠 Sans avance"
+                    android:textColor="#FF9800"
                     android:textSize="12sp" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="🔴 Réservé"
+                    android:text="🔴 Avec avance"
                     android:textColor="#E53935"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -74,26 +74,33 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp" />
 
-            <!-- Indicateur de statut -->
-            <TextView
-                android:id="@+id/statusIndicator"
+            <!-- Indicateur de statut avec fond coloré -->
+            <LinearLayout
+                android:id="@+id/dateStatusContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:gravity="center"
-                android:padding="12dp"
-                android:text="Disponible"
-                android:textColor="#43A047"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:background="@android:drawable/editbox_background" />
+                android:background="#FFFFFF"
+                android:orientation="vertical"
+                android:padding="12dp">
 
-            <!-- Boutons de modification du statut -->
+                <TextView
+                    android:id="@+id/statusIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Disponible"
+                    android:textColor="#43A047"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Boutons de modification -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Modifier le statut de la date sélectionnée:"
+                android:text="Modifier le statut:"
                 android:textColor="@android:color/black"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -142,7 +149,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="Réservations existantes:"
+                android:text="Réservations:"
                 android:textColor="@android:color/black"
                 android:textSize="14sp"
                 android:textStyle="bold" />

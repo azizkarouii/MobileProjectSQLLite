@@ -1,6 +1,5 @@
 package com.example.projetmobilemysql.adapters;
 
-
 import android.content.Context;
 import android.graphics.Color;
 import android.text.TextUtils;
@@ -47,10 +46,30 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
     public void onBindViewHolder(@NonNull ReservationViewHolder holder, int position) {
         Reservation reservation = reservationList.get(position);
 
+        // Nom du client
         holder.clientNameText.setText(reservation.getClientName());
+
+        // Nom de la propriété
+        if (!TextUtils.isEmpty(reservation.getPropertyTitle())) {
+            holder.propertyNameText.setVisibility(View.VISIBLE);
+            holder.propertyNameText.setText(reservation.getPropertyTitle());
+        } else {
+            holder.propertyNameText.setVisibility(View.GONE);
+        }
+
         holder.clientPhoneText.setText(reservation.getClientPhone());
-        holder.startDateText.setText(reservation.getStartDate());
-        holder.endDateText.setText(reservation.getEndDate());
+
+        // Dates avec heures
+        String dateInfo = reservation.getStartDate();
+        if (!TextUtils.isEmpty(reservation.getCheckInTime())) {
+            dateInfo += " à " + reservation.getCheckInTime();
+        }
+        dateInfo += " → " + reservation.getEndDate();
+        if (!TextUtils.isEmpty(reservation.getCheckOutTime())) {
+            dateInfo += " à " + reservation.getCheckOutTime();
+        }
+        holder.startDateText.setText(dateInfo);
+
         holder.totalAmountText.setText(String.format("%.0f TND", reservation.getTotalAmount()));
         holder.advanceAmountText.setText(String.format("%.0f TND", reservation.getAdvanceAmount()));
 
@@ -58,12 +77,18 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
         String status = reservation.getStatus();
         holder.statusText.setText(reservation.getStatusLabel());
 
-        if (status.equals("reserved")) {
-            holder.statusText.setTextColor(Color.parseColor("#4CAF50")); // Vert
+        if (status.equals("active")) {
+            holder.statusText.setTextColor(Color.parseColor("#43A047")); // Vert
+        } else if (status.equals("reserved")) {
+            holder.statusText.setTextColor(Color.parseColor("#E53935")); // Rouge
         } else if (status.equals("pending")) {
             holder.statusText.setTextColor(Color.parseColor("#FF9800")); // Orange
+        } else if (status.equals("cancelled")) {
+            holder.statusText.setTextColor(Color.parseColor("#757575")); // Gris
+        } else if (status.equals("completed")) {
+            holder.statusText.setTextColor(Color.parseColor("#1976D2")); // Bleu
         } else {
-            holder.statusText.setTextColor(Color.parseColor("#F44336")); // Rouge
+            holder.statusText.setTextColor(Color.parseColor("#FF9800")); // Orange par défaut
         }
 
         // Notes (si présentes)
@@ -93,17 +118,17 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
     }
 
     static class ReservationViewHolder extends RecyclerView.ViewHolder {
-        TextView clientNameText, clientPhoneText, statusText;
-        TextView startDateText, endDateText;
+        TextView clientNameText, propertyNameText, clientPhoneText, statusText;
+        TextView startDateText;
         TextView totalAmountText, advanceAmountText, notesText;
 
         public ReservationViewHolder(@NonNull View itemView) {
             super(itemView);
             clientNameText = itemView.findViewById(R.id.clientNameText);
+            propertyNameText = itemView.findViewById(R.id.propertyNameText);
             clientPhoneText = itemView.findViewById(R.id.clientPhoneText);
             statusText = itemView.findViewById(R.id.statusText);
             startDateText = itemView.findViewById(R.id.startDateText);
-            endDateText = itemView.findViewById(R.id.endDateText);
             totalAmountText = itemView.findViewById(R.id.totalAmountText);
             advanceAmountText = itemView.findViewById(R.id.advanceAmountText);
             notesText = itemView.findViewById(R.id.notesText);

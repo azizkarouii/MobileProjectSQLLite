@@ -20,9 +20,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.projetmobilemysql.R;
 import com.example.projetmobilemysql.activities.AddReservationActivity;
+import com.example.projetmobilemysql.activities.PropertyDetailActivity;
+import com.example.projetmobilemysql.activities.ReservationDetailActivity;
 import com.example.projetmobilemysql.adapters.ReservationAdapter;
 import com.example.projetmobilemysql.database.ReservationDAO;
 import com.example.projetmobilemysql.models.Reservation;
+import com.example.projetmobilemysql.utils.ReservationStatusUpdater;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
@@ -79,6 +82,9 @@ public class ReservationsFragment extends Fragment {
                     "Réservation: " + reservation.getClientName(),
                     Toast.LENGTH_SHORT).show();
             // TODO: Ouvrir ReservationDetailActivity
+            Intent intent = new Intent(getContext(), ReservationDetailActivity.class);
+            intent.putExtra("reservation_id", reservation.getId());
+            startActivity(intent);
         });
 
         // IMPORTANT: Charger les réservations APRÈS avoir configuré l'adapter
@@ -189,7 +195,22 @@ public class ReservationsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Recharger les réservations quand on revient au fragment
-        loadReservations();
+        // Mettre à jour les statuts puis recharger
+        new Thread(() -> {
+            ReservationStatusUpdater updater = new ReservationStatusUpdater(getContext());
+            updater.updateAllReservations();
+
+            // Attendre un peu que la mise à jour se termine
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Recharger les réservations
+            getActivity().runOnUiThread(() -> {
+                loadReservations();
+            });
+        }).start();
     }
 }

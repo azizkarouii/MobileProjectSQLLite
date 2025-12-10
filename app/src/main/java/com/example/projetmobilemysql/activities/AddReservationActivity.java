@@ -1,17 +1,20 @@
 package com.example.projetmobilemysql.activities;
 
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.projetmobilemysql.R;
@@ -37,6 +40,7 @@ public class AddReservationActivity extends AppCompatActivity {
     private Spinner propertySpinner;
     private TextInputEditText clientNameInput, clientPhoneInput;
     private TextInputEditText startDateInput, endDateInput;
+    private TextInputEditText checkInTimeInput, checkOutTimeInput;
     private TextInputEditText totalAmountInput, advanceAmountInput, notesInput;
     private RadioButton statusPending, statusReserved;
     private MaterialButton saveButton, viewCalendarButton;
@@ -81,6 +85,10 @@ public class AddReservationActivity extends AppCompatActivity {
         startDateInput.setOnClickListener(v -> showStartDatePicker());
         endDateInput.setOnClickListener(v -> showEndDatePicker());
 
+        // Listeners pour les heures
+        checkInTimeInput.setOnClickListener(v -> showCheckInTimePicker());
+        checkOutTimeInput.setOnClickListener(v -> showCheckOutTimePicker());
+
         // Listener
         saveButton.setOnClickListener(v -> saveReservation());
 
@@ -94,6 +102,8 @@ public class AddReservationActivity extends AppCompatActivity {
         clientPhoneInput = findViewById(R.id.clientPhoneInput);
         startDateInput = findViewById(R.id.startDateInput);
         endDateInput = findViewById(R.id.endDateInput);
+        checkInTimeInput = findViewById(R.id.checkInTimeInput);
+        checkOutTimeInput = findViewById(R.id.checkOutTimeInput);
         totalAmountInput = findViewById(R.id.totalAmountInput);
         advanceAmountInput = findViewById(R.id.advanceAmountInput);
         notesInput = findViewById(R.id.notesInput);
@@ -168,6 +178,10 @@ public class AddReservationActivity extends AppCompatActivity {
             }
         }).start();
     }
+
+
+
+
 
     private void openPropertyCalendar() {
         if (selectedPropertyId == -1) {
@@ -260,6 +274,38 @@ public class AddReservationActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
+    private void showCheckInTimePicker() {
+        String currentTime = checkInTimeInput.getText().toString();
+        int hour = 14, minute = 0;
+        if (!TextUtils.isEmpty(currentTime) && currentTime.contains(":")) {
+            String[] parts = currentTime.split(":");
+            hour = Integer.parseInt(parts[0]);
+            minute = Integer.parseInt(parts[1]);
+        }
+
+        TimePickerDialog dialog = new TimePickerDialog(this,
+                (view, h, m) -> {
+                    checkInTimeInput.setText(String.format(Locale.getDefault(), "%02d:%02d", h, m));
+                }, hour, minute, true);
+        dialog.show();
+    }
+
+    private void showCheckOutTimePicker() {
+        String currentTime = checkOutTimeInput.getText().toString();
+        int hour = 12, minute = 0;
+        if (!TextUtils.isEmpty(currentTime) && currentTime.contains(":")) {
+            String[] parts = currentTime.split(":");
+            hour = Integer.parseInt(parts[0]);
+            minute = Integer.parseInt(parts[1]);
+        }
+
+        TimePickerDialog dialog = new TimePickerDialog(this,
+                (view, h, m) -> {
+                    checkOutTimeInput.setText(String.format(Locale.getDefault(), "%02d:%02d", h, m));
+                }, hour, minute, true);
+        dialog.show();
+    }
+
     /**
      * Calculer automatiquement le montant total basé sur le nombre de jours et le prix par jour
      */
@@ -310,7 +356,7 @@ public class AddReservationActivity extends AppCompatActivity {
 
                 for (Reservation res : reservations) {
                     if (isDateInRange(date, res.getStartDate(), res.getEndDate())) {
-                        if (res.getStatus().equals("reserved")) {
+                        if (res.getStatus().equals("reserved") || res.getStatus().equals("active")) {
                             hasConflict = true;
                             break;
                         }
@@ -342,6 +388,8 @@ public class AddReservationActivity extends AppCompatActivity {
         String clientPhone = clientPhoneInput.getText().toString().trim();
         String startDate = startDateInput.getText().toString().trim();
         String endDate = endDateInput.getText().toString().trim();
+        String checkInTime = checkInTimeInput.getText().toString().trim();
+        String checkOutTime = checkOutTimeInput.getText().toString().trim();
         String totalAmount = totalAmountInput.getText().toString().trim();
         String advanceAmount = advanceAmountInput.getText().toString().trim();
         String notes = notesInput.getText().toString().trim();
@@ -385,6 +433,8 @@ public class AddReservationActivity extends AppCompatActivity {
         reservation.setSamsarId(currentUserId);
         reservation.setStartDate(startDate);
         reservation.setEndDate(endDate);
+        reservation.setCheckInTime(checkInTime);
+        reservation.setCheckOutTime(checkOutTime);
         reservation.setClientName(clientName);
         reservation.setClientPhone(clientPhone);
         reservation.setTotalAmount(parseDouble(totalAmount));
@@ -443,5 +493,10 @@ public class AddReservationActivity extends AppCompatActivity {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }

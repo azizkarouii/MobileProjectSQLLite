@@ -1,13 +1,14 @@
 package com.example.projetmobilemysql.models;
 
-
 public class Reservation {
     private int id;
     private int propertyId;
-    private int samsarId; // User ID du courtier
+    private int samsarId;
     private String startDate;
     private String endDate;
-    private String status; // available/pending/reserved
+    private String checkInTime;  // NOUVEAU: Heure d'entrée (format HH:mm)
+    private String checkOutTime; // NOUVEAU: Heure de sortie (format HH:mm)
+    private String status; // pending, reserved, active, cancelled
     private String clientName;
     private String clientPhone;
     private double advanceAmount;
@@ -15,6 +16,7 @@ public class Reservation {
     private String notes;
     private String createdAt;
     private String updatedAt;
+    private String propertyTitle; // NOUVEAU: pour affichage
 
     // Constructeur vide
     public Reservation() {
@@ -22,14 +24,17 @@ public class Reservation {
 
     // Constructeur complet
     public Reservation(int id, int propertyId, int samsarId, String startDate,
-                       String endDate, String status, String clientName,
-                       String clientPhone, double advanceAmount, double totalAmount,
-                       String notes, String createdAt, String updatedAt) {
+                       String endDate, String checkInTime, String checkOutTime,
+                       String status, String clientName, String clientPhone,
+                       double advanceAmount, double totalAmount, String notes,
+                       String createdAt, String updatedAt) {
         this.id = id;
         this.propertyId = propertyId;
         this.samsarId = samsarId;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.checkInTime = checkInTime;
+        this.checkOutTime = checkOutTime;
         this.status = status;
         this.clientName = clientName;
         this.clientPhone = clientPhone;
@@ -38,20 +43,6 @@ public class Reservation {
         this.notes = notes;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    // Constructeur sans ID (pour insertion)
-    public Reservation(int propertyId, int samsarId, String startDate,
-                       String endDate, String clientName, String clientPhone,
-                       double totalAmount) {
-        this.propertyId = propertyId;
-        this.samsarId = samsarId;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.clientName = clientName;
-        this.clientPhone = clientPhone;
-        this.totalAmount = totalAmount;
-        this.status = "pending";
     }
 
     // Getters et Setters
@@ -93,6 +84,22 @@ public class Reservation {
 
     public void setEndDate(String endDate) {
         this.endDate = endDate;
+    }
+
+    public String getCheckInTime() {
+        return checkInTime;
+    }
+
+    public void setCheckInTime(String checkInTime) {
+        this.checkInTime = checkInTime;
+    }
+
+    public String getCheckOutTime() {
+        return checkOutTime;
+    }
+
+    public void setCheckOutTime(String checkOutTime) {
+        this.checkOutTime = checkOutTime;
     }
 
     public String getStatus() {
@@ -159,6 +166,14 @@ public class Reservation {
         this.updatedAt = updatedAt;
     }
 
+    public String getPropertyTitle() {
+        return propertyTitle;
+    }
+
+    public void setPropertyTitle(String propertyTitle) {
+        this.propertyTitle = propertyTitle;
+    }
+
     // Méthodes utilitaires
     public double getRemainingAmount() {
         return totalAmount - advanceAmount;
@@ -170,12 +185,47 @@ public class Reservation {
                 return "En attente";
             case "reserved":
                 return "Réservé";
-            case "available":
-                return "Disponible";
+            case "active":
+                return "En cours";
             case "cancelled":
                 return "Annulé";
             default:
                 return status;
+        }
+    }
+
+    public int getStatusColor() {
+        switch (status) {
+            case "pending":
+                return 0xFFFB8C00; // Orange
+            case "reserved":
+                return 0xFFE53935; // Rouge
+            case "active":
+                return 0xFF43A047; // Vert
+            case "cancelled":
+                return 0xFF757575; // Gris
+            default:
+                return 0xFF757575;
+        }
+    }
+
+    /**
+     * Vérifie si la réservation devrait être active maintenant
+     */
+    public boolean shouldBeActive() {
+        try {
+            java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
+            java.util.Date now = new java.util.Date();
+
+            String startDateTime = startDate + " " + (checkInTime != null ? checkInTime : "00:00");
+            String endDateTime = endDate + " " + (checkOutTime != null ? checkOutTime : "23:59");
+
+            java.util.Date start = dateFormat.parse(startDateTime);
+            java.util.Date end = dateFormat.parse(endDateTime);
+
+            return now.after(start) && now.before(end);
+        } catch (Exception e) {
+            return false;
         }
     }
 

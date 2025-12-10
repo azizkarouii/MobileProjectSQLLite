@@ -1,6 +1,5 @@
 package com.example.projetmobilemysql.database;
 
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -20,9 +19,6 @@ public class ReservationDAO {
         dbHelper = new DatabaseHelper(context);
     }
 
-    /**
-     * Créer une nouvelle réservation
-     */
     public long createReservation(Reservation reservation) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -31,6 +27,8 @@ public class ReservationDAO {
         values.put(DatabaseHelper.COLUMN_RES_SAMSAR_ID, reservation.getSamsarId());
         values.put(DatabaseHelper.COLUMN_RES_START_DATE, reservation.getStartDate());
         values.put(DatabaseHelper.COLUMN_RES_END_DATE, reservation.getEndDate());
+        values.put(DatabaseHelper.COLUMN_RES_CHECKIN_TIME, reservation.getCheckInTime());
+        values.put(DatabaseHelper.COLUMN_RES_CHECKOUT_TIME, reservation.getCheckOutTime());
         values.put(DatabaseHelper.COLUMN_RES_STATUS, reservation.getStatus());
         values.put(DatabaseHelper.COLUMN_RES_CLIENT_NAME, reservation.getClientName());
         values.put(DatabaseHelper.COLUMN_RES_CLIENT_PHONE, reservation.getClientPhone());
@@ -45,24 +43,16 @@ public class ReservationDAO {
         return id;
     }
 
-    /**
-     * Récupérer une réservation par ID
-     */
     public Reservation getReservationById(int reservationId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        String selection = DatabaseHelper.COLUMN_RES_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(reservationId)};
+        String query = "SELECT r.*, p." + DatabaseHelper.COLUMN_PROP_TITLE + " as property_title " +
+                "FROM " + DatabaseHelper.TABLE_RESERVATIONS + " r " +
+                "LEFT JOIN " + DatabaseHelper.TABLE_PROPERTIES + " p " +
+                "ON r." + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = p." + DatabaseHelper.COLUMN_PROP_ID + " " +
+                "WHERE r." + DatabaseHelper.COLUMN_RES_ID + " = ?";
 
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_RESERVATIONS,
-                null,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null
-        );
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(reservationId)});
 
         Reservation reservation = null;
         if (cursor != null && cursor.moveToFirst()) {
@@ -74,22 +64,17 @@ public class ReservationDAO {
         return reservation;
     }
 
-    /**
-     * Récupérer toutes les réservations
-     */
     public List<Reservation> getAllReservations() {
         List<Reservation> reservations = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_RESERVATIONS,
-                null,
-                null,
-                null,
-                null,
-                null,
-                DatabaseHelper.COLUMN_RES_CREATED_AT + " DESC"
-        );
+        String query = "SELECT r.*, p." + DatabaseHelper.COLUMN_PROP_TITLE + " as property_title " +
+                "FROM " + DatabaseHelper.TABLE_RESERVATIONS + " r " +
+                "LEFT JOIN " + DatabaseHelper.TABLE_PROPERTIES + " p " +
+                "ON r." + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = p." + DatabaseHelper.COLUMN_PROP_ID + " " +
+                "ORDER BY r." + DatabaseHelper.COLUMN_RES_CREATED_AT + " DESC";
+
+        Cursor cursor = db.rawQuery(query, null);
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -102,25 +87,18 @@ public class ReservationDAO {
         return reservations;
     }
 
-    /**
-     * Récupérer les réservations d'un courtier
-     */
     public List<Reservation> getReservationsBySamsar(int samsarId) {
         List<Reservation> reservations = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        String selection = DatabaseHelper.COLUMN_RES_SAMSAR_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(samsarId)};
+        String query = "SELECT r.*, p." + DatabaseHelper.COLUMN_PROP_TITLE + " as property_title " +
+                "FROM " + DatabaseHelper.TABLE_RESERVATIONS + " r " +
+                "LEFT JOIN " + DatabaseHelper.TABLE_PROPERTIES + " p " +
+                "ON r." + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = p." + DatabaseHelper.COLUMN_PROP_ID + " " +
+                "WHERE r." + DatabaseHelper.COLUMN_RES_SAMSAR_ID + " = ? " +
+                "ORDER BY r." + DatabaseHelper.COLUMN_RES_START_DATE + " DESC";
 
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_RESERVATIONS,
-                null,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                DatabaseHelper.COLUMN_RES_START_DATE + " DESC"
-        );
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(samsarId)});
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -133,25 +111,18 @@ public class ReservationDAO {
         return reservations;
     }
 
-    /**
-     * Récupérer les réservations d'une propriété
-     */
     public List<Reservation> getReservationsByProperty(int propertyId) {
         List<Reservation> reservations = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        String selection = DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = ?";
-        String[] selectionArgs = {String.valueOf(propertyId)};
+        String query = "SELECT r.*, p." + DatabaseHelper.COLUMN_PROP_TITLE + " as property_title " +
+                "FROM " + DatabaseHelper.TABLE_RESERVATIONS + " r " +
+                "LEFT JOIN " + DatabaseHelper.TABLE_PROPERTIES + " p " +
+                "ON r." + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = p." + DatabaseHelper.COLUMN_PROP_ID + " " +
+                "WHERE r." + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = ? " +
+                "ORDER BY r." + DatabaseHelper.COLUMN_RES_START_DATE + " ASC";
 
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_RESERVATIONS,
-                null,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                DatabaseHelper.COLUMN_RES_START_DATE + " ASC"
-        );
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(propertyId)});
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -164,26 +135,18 @@ public class ReservationDAO {
         return reservations;
     }
 
-    /**
-     * Récupérer les réservations par statut
-     */
     public List<Reservation> getReservationsByStatus(int samsarId, String status) {
         List<Reservation> reservations = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        String selection = DatabaseHelper.COLUMN_RES_SAMSAR_ID + " = ? AND "
-                + DatabaseHelper.COLUMN_RES_STATUS + " = ?";
-        String[] selectionArgs = {String.valueOf(samsarId), status};
+        String query = "SELECT r.*, p." + DatabaseHelper.COLUMN_PROP_TITLE + " as property_title " +
+                "FROM " + DatabaseHelper.TABLE_RESERVATIONS + " r " +
+                "LEFT JOIN " + DatabaseHelper.TABLE_PROPERTIES + " p " +
+                "ON r." + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = p." + DatabaseHelper.COLUMN_PROP_ID + " " +
+                "WHERE r." + DatabaseHelper.COLUMN_RES_SAMSAR_ID + " = ? AND r." + DatabaseHelper.COLUMN_RES_STATUS + " = ? " +
+                "ORDER BY r." + DatabaseHelper.COLUMN_RES_START_DATE + " DESC";
 
-        Cursor cursor = db.query(
-                DatabaseHelper.TABLE_RESERVATIONS,
-                null,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                DatabaseHelper.COLUMN_RES_START_DATE + " DESC"
-        );
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(samsarId), status});
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -196,15 +159,12 @@ public class ReservationDAO {
         return reservations;
     }
 
-    /**
-     * Vérifier si une propriété est disponible pour une période
-     */
     public boolean isPropertyAvailable(int propertyId, String startDate, String endDate) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         String query = "SELECT COUNT(*) FROM " + DatabaseHelper.TABLE_RESERVATIONS + " "
                 + "WHERE " + DatabaseHelper.COLUMN_RES_PROPERTY_ID + " = ? "
-                + "AND " + DatabaseHelper.COLUMN_RES_STATUS + " IN ('pending', 'reserved') "
+                + "AND " + DatabaseHelper.COLUMN_RES_STATUS + " IN ('pending', 'reserved', 'active') "
                 + "AND NOT (" + DatabaseHelper.COLUMN_RES_END_DATE + " <= ? OR "
                 + DatabaseHelper.COLUMN_RES_START_DATE + " >= ?)";
 
@@ -222,15 +182,14 @@ public class ReservationDAO {
         return available;
     }
 
-    /**
-     * Mettre à jour une réservation
-     */
     public int updateReservation(Reservation reservation) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
 
         values.put(DatabaseHelper.COLUMN_RES_START_DATE, reservation.getStartDate());
         values.put(DatabaseHelper.COLUMN_RES_END_DATE, reservation.getEndDate());
+        values.put(DatabaseHelper.COLUMN_RES_CHECKIN_TIME, reservation.getCheckInTime());
+        values.put(DatabaseHelper.COLUMN_RES_CHECKOUT_TIME, reservation.getCheckOutTime());
         values.put(DatabaseHelper.COLUMN_RES_STATUS, reservation.getStatus());
         values.put(DatabaseHelper.COLUMN_RES_CLIENT_NAME, reservation.getClientName());
         values.put(DatabaseHelper.COLUMN_RES_CLIENT_PHONE, reservation.getClientPhone());
@@ -248,9 +207,6 @@ public class ReservationDAO {
         return rows;
     }
 
-    /**
-     * Changer le statut d'une réservation
-     */
     public boolean updateStatus(int reservationId, String newStatus) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -266,9 +222,6 @@ public class ReservationDAO {
         return rows > 0;
     }
 
-    /**
-     * Supprimer une réservation
-     */
     public int deleteReservation(int reservationId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -282,16 +235,13 @@ public class ReservationDAO {
         return rows;
     }
 
-    /**
-     * Obtenir les statistiques des réservations
-     */
     public double getTotalRevenue(int samsarId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         String query = "SELECT SUM(" + DatabaseHelper.COLUMN_RES_TOTAL_AMOUNT + ") FROM "
                 + DatabaseHelper.TABLE_RESERVATIONS + " "
                 + "WHERE " + DatabaseHelper.COLUMN_RES_SAMSAR_ID + " = ? "
-                + "AND " + DatabaseHelper.COLUMN_RES_STATUS + " = 'reserved'";
+                + "AND " + DatabaseHelper.COLUMN_RES_STATUS + " IN ('reserved', 'active')";
 
         Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(samsarId)});
 
@@ -305,9 +255,6 @@ public class ReservationDAO {
         return total;
     }
 
-    /**
-     * Convertir un Cursor en objet Reservation
-     */
     private Reservation cursorToReservation(Cursor cursor) {
         Reservation reservation = new Reservation();
         reservation.setId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_ID)));
@@ -315,6 +262,22 @@ public class ReservationDAO {
         reservation.setSamsarId(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_SAMSAR_ID)));
         reservation.setStartDate(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_START_DATE)));
         reservation.setEndDate(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_END_DATE)));
+
+        // Nouvelles colonnes avec gestion de null
+        int checkInIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_RES_CHECKIN_TIME);
+        if (checkInIndex != -1 && !cursor.isNull(checkInIndex)) {
+            reservation.setCheckInTime(cursor.getString(checkInIndex));
+        } else {
+            reservation.setCheckInTime("14:00");
+        }
+
+        int checkOutIndex = cursor.getColumnIndex(DatabaseHelper.COLUMN_RES_CHECKOUT_TIME);
+        if (checkOutIndex != -1 && !cursor.isNull(checkOutIndex)) {
+            reservation.setCheckOutTime(cursor.getString(checkOutIndex));
+        } else {
+            reservation.setCheckOutTime("12:00");
+        }
+
         reservation.setStatus(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_STATUS)));
         reservation.setClientName(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_CLIENT_NAME)));
         reservation.setClientPhone(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_CLIENT_PHONE)));
@@ -323,6 +286,13 @@ public class ReservationDAO {
         reservation.setNotes(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_NOTES)));
         reservation.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_CREATED_AT)));
         reservation.setUpdatedAt(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_RES_UPDATED_AT)));
+
+        // Ajouter le titre de la propriété
+        int propertyTitleIndex = cursor.getColumnIndex("property_title");
+        if (propertyTitleIndex != -1 && !cursor.isNull(propertyTitleIndex)) {
+            reservation.setPropertyTitle(cursor.getString(propertyTitleIndex));
+        }
+
         return reservation;
     }
 }

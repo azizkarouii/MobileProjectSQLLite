@@ -2,11 +2,12 @@ package com.example.projetmobilemysql.activities;
 
 import android.os.Bundle;
 import android.widget.CalendarView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,6 +33,7 @@ public class PropertyCalendarActivity extends AppCompatActivity {
     private RecyclerView reservationsRecyclerView;
     private TextView statusIndicator, legendText;
     private MaterialButton btnAvailable, btnPending, btnUnavailable;
+    private LinearLayout dateStatusContainer;
 
     private PropertyAvailabilityDAO availabilityDAO;
     private ReservationDAO reservationDAO;
@@ -49,7 +51,6 @@ public class PropertyCalendarActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_property_calendar);
 
-        // Récupérer les données de l'intent
         propertyId = getIntent().getIntExtra("property_id", -1);
         propertyTitle = getIntent().getStringExtra("property_title");
 
@@ -59,25 +60,18 @@ public class PropertyCalendarActivity extends AppCompatActivity {
             return;
         }
 
-        // Initialiser DAOs
         availabilityDAO = new PropertyAvailabilityDAO(this);
         reservationDAO = new ReservationDAO(this);
 
-        // Initialiser les vues
         initViews();
 
-        // Configuration
         toolbar.setTitle("Calendrier - " + propertyTitle);
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        // Configuration du CalendarView
         setupCalendar();
-
-        // Configuration des boutons de statut
         setupStatusButtons();
-
-        // Charger les réservations
         loadReservations();
+        showUpcomingReservationsInfo();
     }
 
     private void initViews() {
@@ -89,8 +83,8 @@ public class PropertyCalendarActivity extends AppCompatActivity {
         btnAvailable = findViewById(R.id.btnAvailable);
         btnPending = findViewById(R.id.btnPending);
         btnUnavailable = findViewById(R.id.btnUnavailable);
+        dateStatusContainer = findViewById(R.id.dateStatusContainer);
 
-        // Configuration RecyclerView
         reservationList = new ArrayList<>();
         adapter = new CalendarReservationAdapter(reservationList, this);
         reservationsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -125,17 +119,20 @@ public class PropertyCalendarActivity extends AppCompatActivity {
             try {
                 PropertyAvailability availability = availabilityDAO.getAvailability(propertyId, date);
 
-                // Vérifier s'il y a une réservation confirmée pour cette date
                 List<Reservation> reservations = reservationDAO.getReservationsByProperty(propertyId);
                 boolean hasConfirmedReservation = false;
                 boolean hasPendingReservation = false;
+                boolean hasActiveReservation = false;
                 Reservation currentReservation = null;
 
                 for (Reservation res : reservations) {
                     if (isDateInRange(date, res.getStartDate(), res.getEndDate())) {
-                        if (res.getStatus().equals("reserved")) {
+                        if (res.getStatus().equals("reserved") || res.getStatus().equals("active")) {
                             hasConfirmedReservation = true;
                             currentReservation = res;
+                            if (res.getStatus().equals("active")) {
+                                hasActiveReservation = true;
+                            }
                             break;
                         } else if (res.getStatus().equals("pending")) {
                             hasPendingReservation = true;
@@ -146,39 +143,50 @@ public class PropertyCalendarActivity extends AppCompatActivity {
 
                 String status;
                 int color;
+                int backgroundColor;
                 boolean canModify = true;
 
-                if (hasConfirmedReservation) {
-                    status = "Réservé (Non disponible)";
-                    color = 0xFFE53935; // Rouge
+                if (hasActiveReservation) {
+                    status = "🟢 En cours de location";
+                    color = 0xFFFFFFFF; // Blanc
+                    backgroundColor = 0xFF43A047; // Vert
+                    canModify = false;
+                } else if (hasConfirmedReservation) {
+                    status = "🔴 Réservé avec avance";
+                    color = 0xFFFFFFFF; // Blanc
+                    backgroundColor = 0xFFE53935; // Rouge
                     canModify = false;
                 } else if (hasPendingReservation) {
                     Reservation finalRes = currentReservation;
                     boolean hasAdvance = finalRes != null && finalRes.getAdvanceAmount() > 0;
 
                     if (hasAdvance) {
-                        status = "En attente avec avance (Non modifiable)";
-                        color = 0xFFFB8C00; // Orange foncé
+                        status = "🔴 Réservé avec avance";
+                        color = 0xFFFFFFFF; // Blanc
+                        backgroundColor = 0xFFE53935; // Rouge
                         canModify = false;
                     } else {
-                        status = "En attente sans avance (Modifiable)";
-                        color = 0xFFFFA726; // Orange clair
+                        status = "🟠 Réservé sans avance";
+                        color = 0xFFFFFFFF; // Blanc
+                        backgroundColor = 0xFFFB8C00; // Orange
                         canModify = true;
                     }
                 } else if (availability != null && availability.getStatus().equals("unavailable")) {
-                    status = "Non disponible";
-                    color = 0xFFE53935; // Rouge
+                    status = "🔴 Non disponible";
+                    color = 0xFFFFFFFF; // Blanc
+                    backgroundColor = 0xFFE53935; // Rouge
                 } else {
-                    status = "Disponible";
+                    status = "🟢 Disponible";
                     color = 0xFF43A047; // Vert
+                    backgroundColor = 0xFFFFFFFF; // Blanc
                 }
 
                 final boolean finalCanModify = canModify;
                 runOnUiThread(() -> {
                     statusIndicator.setText(status);
                     statusIndicator.setTextColor(color);
+                    dateStatusContainer.setBackgroundColor(backgroundColor);
 
-                    // Activer/désactiver les boutons selon la possibilité de modification
                     btnAvailable.setEnabled(finalCanModify);
                     btnPending.setEnabled(finalCanModify);
                     btnUnavailable.setEnabled(finalCanModify);
@@ -199,11 +207,10 @@ public class PropertyCalendarActivity extends AppCompatActivity {
     private void updateDateStatus(String newStatus) {
         new Thread(() -> {
             try {
-                // Vérifier s'il y a une réservation confirmée
                 List<Reservation> reservations = reservationDAO.getReservationsByProperty(propertyId);
                 for (Reservation res : reservations) {
                     if (isDateInRange(selectedDate, res.getStartDate(), res.getEndDate())) {
-                        if (res.getStatus().equals("reserved")) {
+                        if (res.getStatus().equals("reserved") || res.getStatus().equals("active")) {
                             runOnUiThread(() -> {
                                 Toast.makeText(this,
                                         "Impossible de modifier: réservation confirmée",
@@ -256,6 +263,39 @@ public class PropertyCalendarActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Erreur: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+            }
+        }).start();
+    }
+
+    private void showUpcomingReservationsInfo() {
+        new Thread(() -> {
+            try {
+                List<Reservation> allReservations = reservationDAO.getReservationsByProperty(propertyId);
+
+                Calendar today = Calendar.getInstance();
+                String todayStr = dateFormatter.format(today.getTime());
+
+                int upcoming = 0;
+                int active = 0;
+
+                for (Reservation res : allReservations) {
+                    if (res.getStartDate().compareTo(todayStr) > 0) {
+                        upcoming++;
+                    } else if (isDateInRange(todayStr, res.getStartDate(), res.getEndDate())) {
+                        active++;
+                    }
+                }
+
+                final int upcomingCount = upcoming;
+                final int activeCount = active;
+
+                runOnUiThread(() -> {
+                    String info = String.format("📊 %d en cours • %d à venir", activeCount, upcomingCount);
+                    legendText.setText(info);
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }).start();
     }

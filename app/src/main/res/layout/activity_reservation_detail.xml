@@ -19,39 +19,8 @@
             android:layout_height="?attr/actionBarSize"
             android:background="#6200EE"
             app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel"
-            app:title="Nouvelle réservation"
+            app:title="Modifier la réservation"
             app:titleTextColor="@android:color/white" />
-
-        <!-- Sélection de la propriété -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Propriété"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/propertySpinner"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="8dp"
-            android:background="@android:drawable/edit_text"
-            android:minHeight="56dp"
-            android:padding="16dp" />
-
-        <!-- Bouton Calendrier -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/viewCalendarButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:enabled="false"
-            android:text="📅 Sélectionner dates depuis calendrier"
-            android:textSize="14sp"
-            app:cornerRadius="8dp" />
 
         <!-- Nom du client -->
         <com.google.android.material.textfield.TextInputLayout
@@ -68,14 +37,13 @@
                 android:inputType="textPersonName" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Téléphone du client -->
+        <!-- Téléphone -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Téléphone du client"
-            app:boxStrokeColor="#6200EE"
-            app:prefixText="+216 ">
+            android:hint="Téléphone"
+            app:boxStrokeColor="#6200EE">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/clientPhoneInput"
@@ -89,19 +57,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Période de réservation"
+            android:text="Période de location"
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Saisie manuelle ou sélection depuis le calendrier"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="12sp"
-            android:textStyle="italic" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -139,15 +98,8 @@
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Heures"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
 
+        <!-- Heures -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -165,8 +117,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:focusable="false"
-                    android:inputType="none"
-                    android:text="14:00" />
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -182,24 +133,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:focusable="false"
-                    android:inputType="none"
-                    android:text="12:00" />
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
         <!-- Montants -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Montants (TND)"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
@@ -238,28 +180,33 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Statut"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="12sp" />
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <RadioGroup
             android:id="@+id/statusRadioGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <RadioButton
                 android:id="@+id/statusPending"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="En attente"
-                android:checked="true" />
+                android:text="🟠 En attente" />
 
             <RadioButton
                 android:id="@+id/statusReserved"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="Confirmé" />
+                android:text="🔴 Réservé (avec avance)" />
+
+            <RadioButton
+                android:id="@+id/statusActive"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟢 En cours de location" />
         </RadioGroup>
 
         <!-- Notes -->
@@ -267,7 +214,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Notes / Remarques"
+            android:hint="Notes"
             app:boxStrokeColor="#6200EE">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -276,20 +223,41 @@
                 android:layout_height="wrap_content"
                 android:gravity="top"
                 android:inputType="textMultiLine"
-                android:lines="3"
-                android:minLines="2" />
+                android:lines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Bouton Enregistrer -->
+        <!-- Bouton Activer -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/activateButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="24dp"
+            android:text="🟢 Activer la réservation"
+            android:textSize="16sp"
+            app:backgroundTint="#43A047"
+            app:cornerRadius="8dp" />
+
+        <!-- Bouton Mettre à jour -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/saveButton"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"
-            android:text="Enregistrer"
+            android:layout_marginTop="8dp"
+            android:text="Mettre à jour"
             android:textSize="16sp"
             app:cornerRadius="8dp" />
+
+        <!-- Bouton Supprimer -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="Supprimer la réservation"
+            android:textColor="#F44336" />
 
     </LinearLayout>
 </ScrollView>

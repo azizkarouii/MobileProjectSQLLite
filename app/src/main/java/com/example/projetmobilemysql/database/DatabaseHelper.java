@@ -6,9 +6,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    // Nom et version de la base de données
     private static final String DATABASE_NAME = "samsara.db";
-    private static final int DATABASE_VERSION = 2; // Incrémenté pour la nouvelle table
+    private static final int DATABASE_VERSION = 3; // ⚠️ Incrémenté à 3
 
     // Table USERS
     public static final String TABLE_USERS = "users";
@@ -54,6 +53,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_RES_SAMSAR_ID = "samsar_id";
     public static final String COLUMN_RES_START_DATE = "start_date";
     public static final String COLUMN_RES_END_DATE = "end_date";
+    public static final String COLUMN_RES_CHECKIN_TIME = "check_in_time";  // NOUVEAU
+    public static final String COLUMN_RES_CHECKOUT_TIME = "check_out_time"; // NOUVEAU
     public static final String COLUMN_RES_STATUS = "status";
     public static final String COLUMN_RES_CLIENT_NAME = "client_name";
     public static final String COLUMN_RES_CLIENT_PHONE = "client_phone";
@@ -63,21 +64,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_RES_CREATED_AT = "created_at";
     public static final String COLUMN_RES_UPDATED_AT = "updated_at";
 
-    // Table PROPERTY_SAMSARS (relation many-to-many)
+    // Table PROPERTY_SAMSARS
     public static final String TABLE_PROPERTY_SAMSARS = "property_samsars";
     public static final String COLUMN_PS_PROPERTY_ID = "property_id";
     public static final String COLUMN_PS_SAMSAR_ID = "samsar_id";
 
-    // Table PROPERTY_AVAILABILITY (nouvelle table)
+    // Table PROPERTY_AVAILABILITY
     public static final String TABLE_PROPERTY_AVAILABILITY = "property_availability";
     public static final String COLUMN_AVAIL_ID = "id";
     public static final String COLUMN_AVAIL_PROPERTY_ID = "property_id";
     public static final String COLUMN_AVAIL_DATE = "date";
-    public static final String COLUMN_AVAIL_STATUS = "status"; // available, pending, unavailable
+    public static final String COLUMN_AVAIL_STATUS = "status";
     public static final String COLUMN_AVAIL_NOTES = "notes";
     public static final String COLUMN_AVAIL_CREATED_AT = "created_at";
 
-    // Requêtes de création des tables
+    // Table REVENUE_HISTORY (NOUVELLE pour tracer les revenus)
+    public static final String TABLE_REVENUE_HISTORY = "revenue_history";
+    public static final String COLUMN_REV_ID = "id";
+    public static final String COLUMN_REV_USER_ID = "user_id";
+    public static final String COLUMN_REV_RESERVATION_ID = "reservation_id";
+    public static final String COLUMN_REV_AMOUNT = "amount";
+    public static final String COLUMN_REV_TYPE = "type"; // advance, completion, refund
+    public static final String COLUMN_REV_CREATED_AT = "created_at";
+
     private static final String CREATE_TABLE_USERS = "CREATE TABLE " + TABLE_USERS + " ("
             + COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_USER_NAME + " TEXT NOT NULL, "
@@ -122,6 +131,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_RES_SAMSAR_ID + " INTEGER NOT NULL, "
             + COLUMN_RES_START_DATE + " TEXT NOT NULL, "
             + COLUMN_RES_END_DATE + " TEXT NOT NULL, "
+            + COLUMN_RES_CHECKIN_TIME + " TEXT DEFAULT '14:00', "
+            + COLUMN_RES_CHECKOUT_TIME + " TEXT DEFAULT '12:00', "
             + COLUMN_RES_STATUS + " TEXT DEFAULT 'pending', "
             + COLUMN_RES_CLIENT_NAME + " TEXT NOT NULL, "
             + COLUMN_RES_CLIENT_PHONE + " TEXT, "
@@ -153,32 +164,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY(" + COLUMN_AVAIL_PROPERTY_ID + ") REFERENCES " + TABLE_PROPERTIES + "(" + COLUMN_PROP_ID + ") ON DELETE CASCADE"
             + ")";
 
+    private static final String CREATE_TABLE_REVENUE_HISTORY = "CREATE TABLE " + TABLE_REVENUE_HISTORY + " ("
+            + COLUMN_REV_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_REV_USER_ID + " INTEGER NOT NULL, "
+            + COLUMN_REV_RESERVATION_ID + " INTEGER NOT NULL, "
+            + COLUMN_REV_AMOUNT + " REAL NOT NULL, "
+            + COLUMN_REV_TYPE + " TEXT NOT NULL, "
+            + COLUMN_REV_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
+            + "FOREIGN KEY(" + COLUMN_REV_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + "), "
+            + "FOREIGN KEY(" + COLUMN_REV_RESERVATION_ID + ") REFERENCES " + TABLE_RESERVATIONS + "(" + COLUMN_RES_ID + ") ON DELETE CASCADE"
+            + ")";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Créer toutes les tables
         db.execSQL(CREATE_TABLE_USERS);
         db.execSQL(CREATE_TABLE_PROPERTIES);
         db.execSQL(CREATE_TABLE_RESERVATIONS);
         db.execSQL(CREATE_TABLE_PROPERTY_SAMSARS);
         db.execSQL(CREATE_TABLE_PROPERTY_AVAILABILITY);
+        db.execSQL(CREATE_TABLE_REVENUE_HISTORY);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
-            // Ajouter la table property_availability
             db.execSQL(CREATE_TABLE_PROPERTY_AVAILABILITY);
+        }
+        if (oldVersion < 3) {
+            // Ajouter les colonnes check_in_time et check_out_time
+            db.execSQL("ALTER TABLE " + TABLE_RESERVATIONS + " ADD COLUMN " + COLUMN_RES_CHECKIN_TIME + " TEXT DEFAULT '14:00'");
+            db.execSQL("ALTER TABLE " + TABLE_RESERVATIONS + " ADD COLUMN " + COLUMN_RES_CHECKOUT_TIME + " TEXT DEFAULT '12:00'");
+            // Créer la table revenue_history
+            db.execSQL(CREATE_TABLE_REVENUE_HISTORY);
         }
     }
 
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
-        // Activer les clés étrangères
         db.setForeignKeyConstraintsEnabled(true);
     }
 }
