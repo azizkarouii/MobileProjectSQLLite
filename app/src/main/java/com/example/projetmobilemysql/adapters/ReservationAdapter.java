@@ -83,10 +83,10 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
             holder.statusText.setTextColor(Color.parseColor("#E53935")); // Rouge
         } else if (status.equals("pending")) {
             holder.statusText.setTextColor(Color.parseColor("#FF9800")); // Orange
-        } else if (status.equals("cancelled")) {
-            holder.statusText.setTextColor(Color.parseColor("#757575")); // Gris
         } else if (status.equals("completed")) {
             holder.statusText.setTextColor(Color.parseColor("#1976D2")); // Bleu
+        } else if (status.equals("cancelled")) {
+            holder.statusText.setTextColor(Color.parseColor("#757575")); // Gris
         } else {
             holder.statusText.setTextColor(Color.parseColor("#FF9800")); // Orange par défaut
         }

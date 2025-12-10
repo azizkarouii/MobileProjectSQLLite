@@ -187,6 +187,8 @@ public class Reservation {
                 return "Réservé";
             case "active":
                 return "En cours";
+            case "completed":
+                return "Terminée";
             case "cancelled":
                 return "Annulé";
             default:
@@ -202,6 +204,8 @@ public class Reservation {
                 return 0xFFE53935; // Rouge
             case "active":
                 return 0xFF43A047; // Vert
+            case "completed":
+                return 0xFF1976D2; // Bleu
             case "cancelled":
                 return 0xFF757575; // Gris
             default:

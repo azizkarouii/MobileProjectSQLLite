@@ -20,6 +20,7 @@ import com.example.projetmobilemysql.R;
 import com.example.projetmobilemysql.activities.AddPropertyActivity;
 import com.example.projetmobilemysql.activities.PropertyCalendarActivity;
 import com.example.projetmobilemysql.activities.PropertyDetailActivity;
+import com.example.projetmobilemysql.activities.PropertyViewActivity;
 import com.example.projetmobilemysql.adapters.PropertyAdapter;
 import com.example.projetmobilemysql.database.PropertyDAO;
 import com.example.projetmobilemysql.models.Property;
@@ -70,10 +71,9 @@ public class PropertiesFragment extends Fragment {
         adapter = new PropertyAdapter(propertyList, getContext());
         recyclerView.setAdapter(adapter);
 
-        // Click listener sur les propriétés
+        // Click listener sur les propriétés -> Ouvrir la vue (lecture seule)
         adapter.setOnPropertyClickListener(property -> {
-            // Ouvrir les détails de la propriété
-            Intent intent = new Intent(getContext(), PropertyDetailActivity.class);
+            Intent intent = new Intent(getContext(), PropertyViewActivity.class);
             intent.putExtra("property_id", property.getId());
             startActivity(intent);
         });
@@ -136,7 +136,7 @@ public class PropertiesFragment extends Fragment {
     }
 
     /**
-     * Rechercher des propriétés (appelé depuis MainActivity)
+     * Rechercher des propriétés par titre uniquement (appelé depuis MainActivity)
      */
     public void searchProperties(String query) {
         if (query == null || query.trim().isEmpty()) {
@@ -148,12 +148,8 @@ public class PropertiesFragment extends Fragment {
         List<Property> filteredList = new ArrayList<>();
 
         for (Property property : allPropertiesList) {
-            // Rechercher dans le titre, type, adresse, configuration
-            if (property.getTitle().toLowerCase().contains(searchQuery) ||
-                    property.getType().toLowerCase().contains(searchQuery) ||
-                    property.getAddress().toLowerCase().contains(searchQuery) ||
-                    (property.getConfiguration() != null &&
-                            property.getConfiguration().toLowerCase().contains(searchQuery))) {
+            // Rechercher UNIQUEMENT dans le titre
+            if (property.getTitle().toLowerCase().contains(searchQuery)) {
                 filteredList.add(property);
             }
         }

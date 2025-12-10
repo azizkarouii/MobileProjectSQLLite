@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjetMobileMYSQL">
         <activity
+            android:name=".activities.PropertyViewActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.ReservationDetailActivity"
             android:exported="false" />
         <activity
