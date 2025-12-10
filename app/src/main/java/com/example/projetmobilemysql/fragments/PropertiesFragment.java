@@ -39,6 +39,7 @@ public class PropertiesFragment extends Fragment {
 
     private PropertyDAO propertyDAO;
     private List<Property> propertyList;
+    private List<Property> allPropertiesList = new ArrayList<>();
     private PropertyAdapter adapter;
     private int currentUserId;
 
@@ -108,6 +109,9 @@ public class PropertiesFragment extends Fragment {
                 // Récupérer toutes les propriétés (ou par courtier)
                 List<Property> properties = propertyDAO.getAllProperties();
 
+                // Sauvegarder toutes les propriétés pour la recherche
+                allPropertiesList = new ArrayList<>(properties);
+
                 getActivity().runOnUiThread(() -> {
                     showLoading(false);
                     propertyList.clear();
@@ -129,6 +133,61 @@ public class PropertiesFragment extends Fragment {
                 });
             }
         }).start();
+    }
+
+    /**
+     * Rechercher des propriétés (appelé depuis MainActivity)
+     */
+    public void searchProperties(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            resetSearch();
+            return;
+        }
+
+        String searchQuery = query.toLowerCase().trim();
+        List<Property> filteredList = new ArrayList<>();
+
+        for (Property property : allPropertiesList) {
+            // Rechercher dans le titre, type, adresse, configuration
+            if (property.getTitle().toLowerCase().contains(searchQuery) ||
+                    property.getType().toLowerCase().contains(searchQuery) ||
+                    property.getAddress().toLowerCase().contains(searchQuery) ||
+                    (property.getConfiguration() != null &&
+                            property.getConfiguration().toLowerCase().contains(searchQuery))) {
+                filteredList.add(property);
+            }
+        }
+
+        propertyList.clear();
+        propertyList.addAll(filteredList);
+        adapter.notifyDataSetChanged();
+
+        if (filteredList.isEmpty()) {
+            showEmptyView(true);
+            Toast.makeText(getContext(),
+                    "Aucune propriété trouvée pour \"" + query + "\"",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            showEmptyView(false);
+            Toast.makeText(getContext(),
+                    filteredList.size() + " propriété(s) trouvée(s)",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Réinitialiser la recherche (appelé depuis MainActivity)
+     */
+    public void resetSearch() {
+        propertyList.clear();
+        propertyList.addAll(allPropertiesList);
+        adapter.notifyDataSetChanged();
+
+        if (propertyList.isEmpty()) {
+            showEmptyView(true);
+        } else {
+            showEmptyView(false);
+        }
     }
 
     private void showLoading(boolean show) {

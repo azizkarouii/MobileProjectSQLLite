@@ -1,7 +1,5 @@
 package com.example.projetmobilemysql.fragments;
 
-
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -20,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.projetmobilemysql.R;
 import com.example.projetmobilemysql.activities.AddReservationActivity;
-import com.example.projetmobilemysql.activities.PropertyDetailActivity;
 import com.example.projetmobilemysql.activities.ReservationDetailActivity;
 import com.example.projetmobilemysql.adapters.ReservationAdapter;
 import com.example.projetmobilemysql.database.ReservationDAO;
@@ -44,6 +41,7 @@ public class ReservationsFragment extends Fragment {
 
     private ReservationDAO reservationDAO;
     private List<Reservation> reservationList;
+    private List<Reservation> allReservationsList = new ArrayList<>();
     private ReservationAdapter adapter;
     private int currentUserId;
     private String currentFilter = "all"; // all, pending, reserved
@@ -78,10 +76,6 @@ public class ReservationsFragment extends Fragment {
 
         // Click listener sur les réservations
         adapter.setOnReservationClickListener(reservation -> {
-            Toast.makeText(getContext(),
-                    "Réservation: " + reservation.getClientName(),
-                    Toast.LENGTH_SHORT).show();
-            // TODO: Ouvrir ReservationDetailActivity
             Intent intent = new Intent(getContext(), ReservationDetailActivity.class);
             intent.putExtra("reservation_id", reservation.getId());
             startActivity(intent);
@@ -144,6 +138,9 @@ public class ReservationsFragment extends Fragment {
                     reservations = reservationDAO.getReservationsByStatus(currentUserId, currentFilter);
                 }
 
+                // Sauvegarder toutes les réservations pour la recherche
+                allReservationsList = new ArrayList<>(reservations);
+
                 getActivity().runOnUiThread(() -> {
                     showLoading(false);
                     reservationList.clear();
@@ -154,10 +151,6 @@ public class ReservationsFragment extends Fragment {
                     } else {
                         showEmptyView(false);
                         adapter.notifyDataSetChanged();
-
-                        Toast.makeText(getContext(),
-                                reservationList.size() + " réservation(s) trouvée(s)",
-                                Toast.LENGTH_SHORT).show();
                     }
                 });
             } catch (Exception e) {
@@ -169,6 +162,61 @@ public class ReservationsFragment extends Fragment {
                 });
             }
         }).start();
+    }
+
+    /**
+     * Rechercher des réservations (appelé depuis MainActivity)
+     */
+    public void searchReservations(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            resetSearch();
+            return;
+        }
+
+        String searchQuery = query.toLowerCase().trim();
+        List<Reservation> filteredList = new ArrayList<>();
+
+        for (Reservation reservation : allReservationsList) {
+            // Rechercher dans le nom du client, téléphone, nom de propriété
+            if (reservation.getClientName().toLowerCase().contains(searchQuery) ||
+                    (reservation.getClientPhone() != null &&
+                            reservation.getClientPhone().contains(searchQuery)) ||
+                    (reservation.getPropertyTitle() != null &&
+                            reservation.getPropertyTitle().toLowerCase().contains(searchQuery))) {
+                filteredList.add(reservation);
+            }
+        }
+
+        reservationList.clear();
+        reservationList.addAll(filteredList);
+        adapter.notifyDataSetChanged();
+
+        if (filteredList.isEmpty()) {
+            showEmptyView(true);
+            Toast.makeText(getContext(),
+                    "Aucune réservation trouvée pour \"" + query + "\"",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            showEmptyView(false);
+            Toast.makeText(getContext(),
+                    filteredList.size() + " réservation(s) trouvée(s)",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Réinitialiser la recherche (appelé depuis MainActivity)
+     */
+    public void resetSearch() {
+        reservationList.clear();
+        reservationList.addAll(allReservationsList);
+        adapter.notifyDataSetChanged();
+
+        if (reservationList.isEmpty()) {
+            showEmptyView(true);
+        } else {
+            showEmptyView(false);
+        }
     }
 
     private void showLoading(boolean show) {
