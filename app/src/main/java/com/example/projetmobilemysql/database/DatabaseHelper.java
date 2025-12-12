@@ -87,6 +87,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_REV_TYPE = "type"; // advance, completion, refund
     public static final String COLUMN_REV_CREATED_AT = "created_at";
 
+    // Table PROPERTY_IMAGES
+    public static final String TABLE_PROPERTY_IMAGES = "property_images";
+    public static final String COLUMN_IMG_ID = "id";
+    public static final String COLUMN_IMG_PROPERTY_ID = "property_id";
+    public static final String COLUMN_IMG_PATH = "image_path";
+    public static final String COLUMN_IMG_IS_MAIN = "is_main";
+    public static final String COLUMN_IMG_POSITION = "position";
+    public static final String COLUMN_IMG_CREATED_AT = "created_at";
+
     private static final String CREATE_TABLE_USERS = "CREATE TABLE " + TABLE_USERS + " ("
             + COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
             + COLUMN_USER_NAME + " TEXT NOT NULL, "
@@ -175,6 +184,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY(" + COLUMN_REV_RESERVATION_ID + ") REFERENCES " + TABLE_RESERVATIONS + "(" + COLUMN_RES_ID + ") ON DELETE CASCADE"
             + ")";
 
+    // Requête de création de la table
+    private static final String CREATE_TABLE_PROPERTY_IMAGES = "CREATE TABLE " + TABLE_PROPERTY_IMAGES + " ("
+            + COLUMN_IMG_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + COLUMN_IMG_PROPERTY_ID + " INTEGER NOT NULL, "
+            + COLUMN_IMG_PATH + " TEXT NOT NULL, "
+            + COLUMN_IMG_IS_MAIN + " INTEGER DEFAULT 0, "
+            + COLUMN_IMG_POSITION + " INTEGER DEFAULT 0, "
+            + COLUMN_IMG_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP, "
+            + "FOREIGN KEY(" + COLUMN_IMG_PROPERTY_ID + ") REFERENCES " + TABLE_PROPERTIES + "(" + COLUMN_PROP_ID + ") ON DELETE CASCADE"
+            + ")";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -187,6 +207,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_PROPERTY_SAMSARS);
         db.execSQL(CREATE_TABLE_PROPERTY_AVAILABILITY);
         db.execSQL(CREATE_TABLE_REVENUE_HISTORY);
+        db.execSQL(CREATE_TABLE_PROPERTY_IMAGES);
     }
 
     @Override
@@ -200,6 +221,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE " + TABLE_RESERVATIONS + " ADD COLUMN " + COLUMN_RES_CHECKOUT_TIME + " TEXT DEFAULT '12:00'");
             // Créer la table revenue_history
             db.execSQL(CREATE_TABLE_REVENUE_HISTORY);
+        }
+        if (oldVersion < 4) {
+            db.execSQL(CREATE_TABLE_PROPERTY_IMAGES); // AJOUTEZ CETTE LIGNE
         }
     }
 

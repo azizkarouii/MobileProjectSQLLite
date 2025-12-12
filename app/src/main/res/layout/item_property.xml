@@ -12,6 +12,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
+        <!-- Image de la propriété -->
+        <ImageView
+            android:id="@+id/propertyImageView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="Image de la propriété" />
 
         <!-- Titre, Type et Bouton Calendrier -->
         <LinearLayout
@@ -58,7 +66,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Voir calendrier"
                 android:src="@android:drawable/ic_menu_today"
-                android:tint="#6200EE" />
+                app:tint="#6200EE" />
         </LinearLayout>
 
         <!-- Adresse -->
