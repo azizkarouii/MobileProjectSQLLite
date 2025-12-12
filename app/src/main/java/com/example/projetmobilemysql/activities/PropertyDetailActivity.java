@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -67,9 +68,10 @@ public class PropertyDetailActivity extends AppCompatActivity {
     private PropertyImageAdapter imageAdapter;
     private List<PropertyImage> imageList = new ArrayList<>();
     private String currentPhotoPath;
+    private boolean isRequestingGallery = false;
 
     // Launchers
-    private ActivityResultLauncher<String> requestPermissionLauncher;
+    private ActivityResultLauncher<String[]> requestMultiplePermissionsLauncher;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ActivityResultLauncher<Intent> cameraLauncher;
 
@@ -164,17 +166,31 @@ public class PropertyDetailActivity extends AppCompatActivity {
     }
 
     private void setupActivityLaunchers() {
-        requestPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                isGranted -> {
-                    if (isGranted) {
-                        openGallery();
+        // Multiple permissions launcher
+        requestMultiplePermissionsLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                permissions -> {
+                    boolean allGranted = true;
+                    for (Boolean granted : permissions.values()) {
+                        if (!granted) {
+                            allGranted = false;
+                            break;
+                        }
+                    }
+
+                    if (allGranted) {
+                        if (isRequestingGallery) {
+                            openGallery();
+                        } else {
+                            openCamera();
+                        }
                     } else {
-                        Toast.makeText(this, "Permission refusée", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Permissions nécessaires refusées", Toast.LENGTH_LONG).show();
                     }
                 }
         );
 
+        // Gallery launcher
         galleryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -187,6 +203,7 @@ public class PropertyDetailActivity extends AppCompatActivity {
                 }
         );
 
+        // Camera launcher
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -269,20 +286,41 @@ public class PropertyDetailActivity extends AppCompatActivity {
     }
 
     private void checkPermissionAndPickImage() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            openGallery();
+        isRequestingGallery = true;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                    == PackageManager.PERMISSION_GRANTED) {
+                openGallery();
+            } else {
+                requestMultiplePermissionsLauncher.launch(new String[]{
+                        Manifest.permission.READ_MEDIA_IMAGES
+                });
+            }
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
+            // Android 12 et inférieur
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                openGallery();
+            } else {
+                requestMultiplePermissionsLauncher.launch(new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                });
+            }
         }
     }
 
     private void checkPermissionAndTakePhoto() {
+        isRequestingGallery = false;
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             openCamera();
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+            requestMultiplePermissionsLauncher.launch(new String[]{
+                    Manifest.permission.CAMERA
+            });
         }
     }
 

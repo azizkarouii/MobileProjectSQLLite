@@ -131,7 +131,7 @@ public class AddPropertyActivity extends AppCompatActivity {
             public void onDeleteImage(PropertyImage image, int position) {
                 tempImageList.remove(position);
                 imageAdapter.notifyItemRemoved(position);
-                Toast.makeText(AddPropertyActivity.this, "Image supprimée", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AddPropertyActivity.this, "Image supprimÃ©e", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -141,7 +141,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                 }
                 tempImageList.get(position).setMain(true);
                 imageAdapter.notifyDataSetChanged();
-                Toast.makeText(AddPropertyActivity.this, "Image principale définie", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AddPropertyActivity.this, "Image principale dÃ©finie", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -171,7 +171,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                             openCamera();
                         }
                     } else {
-                        Toast.makeText(this, "Permissions nécessaires refusées", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Permissions nÃ©cessaires refusÃ©es", Toast.LENGTH_LONG).show();
                     }
                 }
         );
@@ -216,7 +216,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                 });
             }
         } else {
-            // Android 12 et inférieur
+            // Android 12 et infÃ©rieur
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
                 openGallery();
@@ -253,7 +253,7 @@ public class AddPropertyActivity extends AppCompatActivity {
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
-                Toast.makeText(this, "Erreur création fichier", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Erreur crÃ©ation fichier", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -265,7 +265,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                 cameraLauncher.launch(takePictureIntent);
             }
         } else {
-            Toast.makeText(this, "Aucune application caméra disponible", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Aucune application camÃ©ra disponible", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -291,7 +291,7 @@ public class AddPropertyActivity extends AppCompatActivity {
                 tempImageList.add(image);
                 imageAdapter.notifyItemInserted(tempImageList.size() - 1);
 
-                Toast.makeText(this, "Image ajoutée", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Image ajoutÃ©e", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             Toast.makeText(this, "Erreur: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -307,7 +307,7 @@ public class AddPropertyActivity extends AppCompatActivity {
         tempImageList.add(image);
         imageAdapter.notifyItemInserted(tempImageList.size() - 1);
 
-        Toast.makeText(this, "Photo ajoutée", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Photo ajoutÃ©e", Toast.LENGTH_SHORT).show();
     }
 
     private String copyImageToAppStorage(Uri sourceUri) {
@@ -408,7 +408,7 @@ public class AddPropertyActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     if (propertyId > 0) {
-                        Toast.makeText(this, "Propriété ajoutée avec succès!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "PropriÃ©tÃ© ajoutÃ©e avec succÃ¨s!", Toast.LENGTH_SHORT).show();
                         finish();
                     } else {
                         Toast.makeText(this, "Erreur lors de l'ajout", Toast.LENGTH_LONG).show();
